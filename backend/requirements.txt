@@ -9,3 +9,5 @@ cachetools==5.3.3
 beautifulsoup4
 bs4
 lxml
+plotly
+chart_studio
