@@ -1,3 +1,6 @@
+import sys, os
+sys.path.insert(0, os.path.dirname(__file__))
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.routes import router
@@ -15,17 +18,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=[
-#         "http://localhost:5173",
-#         "https://your-vercel-app.vercel.app",  # Vercel 도메인
-#         "*"  # 개발 중엔 임시로
-#     ],
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
 
 app.include_router(router)
 app.include_router(admin_router)
