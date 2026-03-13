@@ -1,0 +1,281 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@600;700;800&family=Pretendard:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── DESIGN TOKENS ── */
+:root {
+  --bg:          #08090d;
+  --bg-1:        #0e1018;
+  --bg-2:        #141720;
+  --bg-3:        #1a1f2e;
+  --bg-hover:    #1f2535;
+
+  --border:      rgba(255,255,255,0.07);
+  --border-hi:   rgba(99,179,237,0.35);
+
+  --cyan:        #63b3ed;
+  --cyan-dim:    rgba(99,179,237,0.12);
+  --green:       #48bb78;
+  --red:         #ef4444;
+  --red-dim:     rgba(239,68,68,0.12);
+  --blue:        #3b82f6;
+  --blue-dim:    rgba(59,130,246,0.12);
+  --amber:       #f6ad55;
+  --amber-dim:   rgba(246,173,85,0.12);
+  --purple:      #b794f4;
+
+  --text-1:      #e8edf5;
+  --text-2:      #8892a8;
+  --text-3:      #4a5568;
+
+  --font-display: 'Syne', sans-serif;
+  --font-mono:    'IBM Plex Mono', monospace;
+  --font-body:    'Pretendard', -apple-system, sans-serif;
+
+  --radius:    10px;
+  --radius-sm:  6px;
+  --radius-lg: 14px;
+}
+
+/* ── RESET ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text-1);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bg-3); border-radius: 99px; }
+
+/* ── APP SHELL ── */
+.app-root { display: flex; flex-direction: column; min-height: 100vh; }
+
+/* ── HEADER ── */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(8,9,13,0.95);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+}
+.header-inner {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px; height: 52px;
+}
+.logo { display: flex; align-items: center; gap: 8px; }
+.logo-icon {
+  width: 26px; height: 26px; border-radius: 7px;
+  background: var(--cyan); display: flex; align-items: center; justify-content: center;
+}
+.logo-text {
+  font-family: var(--font-display); font-size: 1rem;
+  font-weight: 800; letter-spacing: 0.04em; color: var(--text-1);
+}
+.logo-accent { color: var(--cyan); }
+.logo-badge {
+  font-family: var(--font-mono); font-size: 0.55rem; font-weight: 600;
+  background: var(--cyan-dim); color: var(--cyan);
+  border: 1px solid rgba(99,179,237,0.3); border-radius: 4px; padding: 1px 5px;
+}
+
+.header-controls { display: flex; align-items: center; gap: 8px; }
+
+.date-picker-wrap {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--bg-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 4px 10px;
+}
+.date-input {
+  background: transparent; border: none; outline: none;
+  color: var(--text-1); font-family: var(--font-mono);
+  font-size: 0.75rem; cursor: pointer; width: 110px;
+}
+.date-input::-webkit-calendar-picker-indicator { filter: invert(0.5); cursor: pointer; }
+
+.market-tabs { display: flex; gap: 2px; background: var(--bg-2); border-radius: var(--radius-sm); padding: 3px; }
+.market-btn {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 3px 10px; border-radius: 5px; border: none; cursor: pointer;
+  background: transparent; color: var(--text-3); transition: all 0.15s;
+}
+.market-btn.active { background: var(--bg-3); color: var(--text-1); }
+.market-label { font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600; }
+.market-sub { font-size: 0.55rem; opacity: 0.6; }
+
+.refresh-btn {
+  width: 32px; height: 32px; border-radius: var(--radius-sm);
+  background: var(--bg-2); border: 1px solid var(--border);
+  color: var(--text-2); cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.refresh-btn:hover { background: var(--bg-3); color: var(--cyan); }
+
+/* 날짜 바 */
+.date-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 20px; border-top: 1px solid var(--border);
+  background: rgba(99,179,237,0.03);
+}
+.date-bar-label { font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; }
+.date-bar-value { font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600; color: var(--cyan); }
+.date-bar-hint { font-size: 0.62rem; color: var(--text-3); margin-left: auto; }
+
+/* 모바일 탭 */
+.mobile-tabs {
+  display: none;
+  border-top: 1px solid var(--border);
+}
+.mobile-tab-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 8px 4px; background: none; border: none; color: var(--text-3);
+  font-size: 0.65rem; cursor: pointer; transition: color 0.15s;
+}
+.mobile-tab-btn.active { color: var(--cyan); }
+
+/* ── MAIN / 2-COL GRID ── */
+.main { flex: 1; padding: 16px 20px; max-width: 1600px; margin: 0 auto; width: 100%; }
+
+.desktop-grid {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+/* 왼쪽: TOP10 + 급증 */
+.col-left { display: flex; flex-direction: column; gap: 12px; }
+
+/* 오른쪽: 대형 차트 영역 */
+.col-right-main { display: flex; flex-direction: column; gap: 12px; }
+
+.mobile-view { display: none; }
+
+/* ── CARD ── */
+.card {
+  background: var(--bg-1); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden;
+  transition: border-color 0.2s;
+}
+.card:hover { border-color: rgba(255,255,255,0.11); }
+.card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px 12px; border-bottom: 1px solid var(--border);
+}
+.card-title-group { display: flex; align-items: center; gap: 10px; }
+.card-icon {
+  width: 30px; height: 30px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.card-title {
+  font-family: var(--font-display); font-size: 0.85rem;
+  font-weight: 700; letter-spacing: 0.03em; color: var(--text-1);
+}
+.card-sub { font-size: 0.68rem; color: var(--text-3); margin-top: 1px; }
+.card-body { padding: 12px 16px; }
+
+/* ── SKELETON ── */
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.skel {
+  background: linear-gradient(90deg, var(--bg-2) 25%, var(--bg-3) 50%, var(--bg-2) 75%);
+  background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: var(--radius-sm);
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-up { animation: fadeUp 0.25s ease forwards; }
+
+/* ── TOP THEMES LIST ── */
+.theme-item {
+  display: flex; flex-direction: column; gap: 5px;
+  padding: 9px 10px; border-radius: var(--radius);
+  cursor: pointer; border: 1px solid transparent;
+  transition: all 0.15s; margin-bottom: 3px;
+}
+.theme-item:hover { background: var(--bg-2); border-color: var(--border); }
+.theme-item-top { display: flex; align-items: center; gap: 8px; }
+.theme-rank {
+  font-family: var(--font-mono); font-size: 0.68rem; font-weight: 600;
+  width: 20px; text-align: center; flex-shrink: 0; color: var(--text-3);
+}
+.theme-rank.top { color: var(--amber); }
+.theme-info { flex: 1; min-width: 0; }
+.theme-name { font-size: 0.82rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.theme-desc { font-size: 0.65rem; color: var(--text-3); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.theme-vol { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+.theme-bar-track { height: 2px; background: var(--bg-3); border-radius: 99px; overflow: hidden; }
+.theme-bar-fill { height: 100%; border-radius: 99px; transition: width 0.6s ease; }
+
+/* 종목 펼치기 */
+.theme-stocks { padding: 8px 0 4px 28px; display: flex; flex-direction: column; gap: 2px; }
+.stock-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.03);
+  font-size: 0.75rem;
+}
+.stock-name { color: var(--text-2); }
+.stock-code { font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-3); margin-left: 6px; }
+.stock-vol { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-1); }
+
+/* ── SURGE ALERT ── */
+.surge-item {
+  padding: 10px 12px; border-radius: var(--radius);
+  border: 1px solid rgba(246,173,85,0.15);
+  background: rgba(246,173,85,0.04);
+  margin-bottom: 6px; transition: all 0.15s;
+}
+.surge-item:hover { background: rgba(246,173,85,0.08); border-color: rgba(246,173,85,0.3); }
+.surge-name { font-size: 0.85rem; font-weight: 600; }
+.surge-ratio { font-family: var(--font-mono); font-size: 0.82rem; font-weight: 700; }
+
+/* ── PERIOD TABS ── */
+.period-tabs { display: flex; gap: 2px; background: var(--bg-2); border-radius: var(--radius-sm); padding: 3px; }
+.period-btn {
+  padding: 3px 9px; border-radius: 4px; border: none; cursor: pointer;
+  background: transparent; color: var(--text-3);
+  font-family: var(--font-mono); font-size: 0.72rem; font-weight: 500;
+  transition: all 0.15s; white-space: nowrap;
+}
+.period-btn.active { background: var(--cyan); color: #000; font-weight: 700; }
+.period-btn:hover:not(.active) { color: var(--text-1); background: var(--bg-3); }
+
+/* ── CHART EMPTY ── */
+.chart-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  height: 200px; gap: 12px; color: var(--text-3); font-size: 0.82rem;
+}
+.chart-empty-icon { color: var(--text-3); opacity: 0.4; }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px; color: var(--text-3); font-size: 0.8rem;
+}
+
+/* ── FOOTER ── */
+.footer {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 14px 20px; border-top: 1px solid var(--border);
+  font-size: 0.68rem; color: var(--text-3);
+}
+.footer-dot { opacity: 0.3; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .desktop-grid { display: none; }
+  .mobile-view { display: block; }
+  .mobile-tabs { display: flex; }
+  .main { padding: 12px; }
+}
