@@ -41,7 +41,7 @@ export default function SurgeAlert({ onThemeSelect, date }) {
                 ▲ {item.ratio}x
               </span>
             </div>
-            <div style={{ display:"flex", justifyContent:"space-between", marginTop:4, fontSize:"0.68rem", color:"var(--text-3)", fontFamily:"var(--font-mono)" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", marginTop:4, fontSize:"0.69rem", color:"var(--text-3)", fontFamily:"var(--font-mono)" }}>
               <span>전일 {item.yesterday_volume_formatted}</span>
               <span>→</span>
               <span style={{ color:"var(--text-1)" }}>오늘 {item.today_volume_formatted}</span>

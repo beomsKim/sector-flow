@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, BarChart, Bar, Cell
@@ -17,8 +17,8 @@ const PERIODS = [
   { label: "100W", value: 100 },
 ];
 
-const UP   = "#ef4444";
-const DOWN = "#3b82f6";
+const UP   = "var(--up)";
+const DOWN = "var(--dn)";
 const FLAT = "#4a5568";
 
 const RANK_COLORS = ["#63b3ed","#b794f4","#48bb78","#f6ad55","#fc8181","#4fd1c5","#9f7aea","#68d391","#fbd38d","#feb2b2","#76e4f7","#fbb6ce"];
@@ -53,13 +53,14 @@ function RankingTab({ market, date, onThemeSelect }) {
   if (loading) return <div className="skel" style={{height:300}} />;
   return (
     <div>
-      <div style={{ display:"flex", justifyContent:"space-between", padding:"0 4px 8px", fontSize:"0.65rem", color:"var(--text-3)", fontFamily:"var(--font-mono)", borderBottom:"1px solid var(--border)", marginBottom:6 }}>
-        <span>#  테마</span><span>거래대금</span>
+      <div style={{ display:"flex", justifyContent:"space-between", padding:"0 4px 8px", fontSize:"0.69rem", color:"var(--text-3)", fontFamily:"var(--font-mono)", borderBottom:"1px solid var(--border)", marginBottom:6 }}>
+        <span>#  테마</span><span style={{ display:"flex", gap:20 }}><span>등락률</span><span>거래대금</span></span>
       </div>
       {data.map((item, idx) => {
         const color = RANK_COLORS[idx % RANK_COLORS.length];
         const maxVol = data[0]?.total_volume || 1;
         const ratio = (item.total_volume / maxVol) * 100;
+        const chg = item.avg_change_pct;
         return (
           <div key={item.theme}
             style={{ padding:"8px 4px", borderBottom:"1px solid rgba(255,255,255,0.03)", cursor:"pointer" }}
@@ -67,10 +68,18 @@ function RankingTab({ market, date, onThemeSelect }) {
           >
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:4 }}>
               <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.68rem", color: idx<3?["#f6ad55","#a0aec0","#c6a05a"][idx]:"var(--text-3)", width:18, textAlign:"center" }}>{idx+1}</span>
+                <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.69rem", color: idx<3?["#f6ad55","#a0aec0","#c6a05a"][idx]:"var(--text-3)", width:18, textAlign:"center" }}>{idx+1}</span>
                 <span style={{ fontSize:"0.85rem", fontWeight:600 }}>{item.theme}</span>
               </div>
-              <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.82rem", fontWeight:700, color }}>{item.total_volume_formatted}</span>
+              <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                {chg !== undefined && (
+                  <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.72rem", fontWeight:700,
+                    color: chg > 0 ? "var(--up)" : chg < 0 ? "var(--dn)" : "var(--text-3)" }}>
+                    {chg > 0 ? "+" : ""}{chg?.toFixed(2)}%
+                  </span>
+                )}
+                <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.82rem", fontWeight:700, color }}>{item.total_volume_formatted}</span>
+              </div>
             </div>
             <div style={{ height:2, background:"var(--bg-3)", borderRadius:99, overflow:"hidden", marginLeft:26 }}>
               <div style={{ height:"100%", width:`${ratio}%`, background:color, borderRadius:99 }} />
@@ -82,9 +91,76 @@ function RankingTab({ market, date, onThemeSelect }) {
   );
 }
 
+function StocksTab({ themeName, date }) {
+  const [order, setOrder] = useState("desc"); // desc=높은순 asc=낮은순
+  const [stocks, setStocks] = useState([]);
+  const [avgChange, setAvgChange] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const BASE_URL = typeof import.meta !== "undefined" ? (import.meta.env?.VITE_API_URL || "http://localhost:8000") : "http://localhost:8000";
+
+  useEffect(() => {
+    if (!themeName) return;
+    setLoading(true);
+    fetch(`${BASE_URL}/api/themes/${encodeURIComponent(themeName)}/stocks?sort=change&order=${order}&date=${date||""}`)
+      .then(r => r.json())
+      .then(d => { setStocks(d.stocks || []); setAvgChange(d.avg_change_pct); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [themeName, order, date]);
+
+  return (
+    <div>
+      {/* 정렬 + 평균 */}
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
+        <div>
+          <div style={{ fontSize:"0.69rem", fontWeight:600, color:"var(--text-2)" }}>전일 대비 등락률</div>
+          <div style={{ fontSize:"0.69rem", color:"var(--text-3)", marginTop:1 }}>전일 종가 대비 기준</div>
+        </div>
+        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+          {avgChange !== null && <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.72rem", fontWeight:700,
+            color: avgChange > 0 ? "var(--up)" : avgChange < 0 ? "var(--dn)" : "var(--text-3)" }}>
+            평균 {avgChange > 0 ? "+" : ""}{avgChange?.toFixed(2)}%
+          </span>}
+          <div style={{ display:"flex", gap:3 }}>
+            <button onClick={() => setOrder("desc")} style={{ background:order==="desc"?"var(--bg-3)":"var(--bg-2)", border:`1px solid ${order==="desc"?"var(--up)":"var(--border)"}`, borderRadius:6, padding:"3px 8px", color:order==="desc"?"var(--up)":"var(--text-3)", fontSize:"0.69rem", cursor:"pointer", fontFamily:"var(--font-mono)" }}>높은순↓</button>
+            <button onClick={() => setOrder("asc")}  style={{ background:order==="asc"?"var(--bg-3)":"var(--bg-2)",  border:`1px solid ${order==="asc"?"var(--dn)":"var(--border)"}`,  borderRadius:6, padding:"3px 8px", color:order==="asc"?"var(--dn)":"var(--text-3)",  fontSize:"0.69rem", cursor:"pointer", fontFamily:"var(--font-mono)" }}>낮은순↑</button>
+          </div>
+        </div>
+      </div>
+      {/* 헤더 */}
+      <div style={{ display:"flex", justifyContent:"space-between", padding:"4px 6px", fontSize:"0.69rem", color:"var(--text-3)", fontFamily:"var(--font-mono)", borderBottom:"1px solid var(--border)", marginBottom:4 }}>
+        <span>종목</span>
+        <span style={{ display:"flex", gap:20 }}><span>전일대비</span><span>거래대금</span></span>
+      </div>
+      {loading && <div className="skel" style={{height:200}} />}
+      {!loading && stocks.map((s, i) => {
+        const chg = s.change_pct;
+        return (
+          <div key={s.code} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"6px 6px", borderBottom:"1px solid rgba(255,255,255,0.03)" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+              <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.69rem", color:"var(--text-3)", width:16, textAlign:"right" }}>{i+1}</span>
+              <div>
+                <div style={{ fontSize:"0.82rem", fontWeight:600 }}>{s.name}</div>
+                <div style={{ fontFamily:"var(--font-mono)", fontSize:"0.69rem", color:"var(--text-3)" }}>{s.code}</div>
+              </div>
+            </div>
+            <div style={{ display:"flex", alignItems:"center", gap:14, textAlign:"right" }}>
+              <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.72rem", fontWeight:700,
+                color: chg > 0 ? "var(--up)" : chg < 0 ? "var(--dn)" : "var(--text-3)" }}>
+                {chg !== undefined ? `${chg > 0 ? "+" : ""}${chg?.toFixed(2)}%` : "-"}
+              </span>
+              <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.72rem", color:"var(--text-2)" }}>{s.volume_formatted || "-"}</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function FlowChart({ themeName, market, date, large = true }) {
   const [weeks, setWeeks] = useState(1);
-  const [tab, setTab] = useState("chart"); // chart | ranking
+  const [tab, setTab] = useState("chart"); // chart | ranking | stocks
   const { data, loading } = useThemeChart(themeName, weeks, market, date);
 
   const first = data[0]?.volume || 0;
@@ -114,7 +190,7 @@ export default function FlowChart({ themeName, market, date, large = true }) {
               </span>
               {tab === "chart" && themeName && data.length > 0 && (
                 <span style={{
-                  fontFamily:"var(--font-mono)", fontSize:"0.68rem", fontWeight:700,
+                  fontFamily:"var(--font-mono)", fontSize:"0.69rem", fontWeight:700,
                   color: isUp ? UP : DOWN,
                   background: isUp ? "rgba(239,68,68,0.1)" : "rgba(59,130,246,0.1)",
                   padding:"1px 6px", borderRadius:4
@@ -134,6 +210,9 @@ export default function FlowChart({ themeName, market, date, large = true }) {
           <button className={`period-btn ${tab==="ranking"?"active":""}`} onClick={() => setTab("ranking")}>
             <List size={11} style={{display:"inline",marginRight:3}} />랭킹
           </button>
+          <button className={`period-btn ${tab==="stocks"?"active":""}`} onClick={() => setTab("stocks")}>
+            종목
+          </button>
         </div>
       </div>
 
@@ -152,6 +231,9 @@ export default function FlowChart({ themeName, market, date, large = true }) {
         {/* 랭킹 탭 */}
         {tab === "ranking" && (
           <RankingTab market={market} date={date} onThemeSelect={(t) => { setTab("chart"); }} />
+        )}
+        {tab === "stocks" && (
+          <StocksTab themeName={themeName} date={date} />
         )}
 
         {/* 차트 탭 */}
@@ -186,7 +268,7 @@ export default function FlowChart({ themeName, market, date, large = true }) {
                       borderRight: i < 4 ? "1px solid var(--border)" : "none",
                       background:"var(--bg-2)"
                     }}>
-                      <div style={{ fontSize:"0.6rem", color:"var(--text-3)", marginBottom:4 }}>{s.label}</div>
+                      <div style={{ fontSize:"0.69rem", color:"var(--text-3)", marginBottom:4 }}>{s.label}</div>
                       <div style={{ fontFamily:"var(--font-mono)", fontSize:"0.78rem", fontWeight:700, color:s.color }}>{s.value}</div>
                     </div>
                   ))}

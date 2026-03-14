@@ -4,22 +4,50 @@ import { useTopThemes } from "../hooks/useThemeData";
 
 const COLORS = ["#63b3ed","#b794f4","#48bb78","#f6ad55","#fc8181","#4fd1c5","#9f7aea","#68d391","#fbd38d","#feb2b2","#76e4f7","#fbb6ce"];
 
-// 종목 전체 모달
+function ChangeBadge({ value, size = "0.65rem" }) {
+  if (value === undefined || value === null) return null;
+  const color = value > 0 ? "var(--up)" : value < 0 ? "var(--dn)" : "var(--text-3)";
+  return (
+    <span style={{ fontFamily:"var(--font-mono)", fontSize:size, fontWeight:700, color }}>
+      {value > 0 ? "+" : ""}{value?.toFixed(2)}%
+    </span>
+  );
+}
+
+// 종목 전체 모달 — 등락률 + 정렬 포함
 function StockModal({ theme, onClose }) {
+  const [sortKey, setSortKey] = useState("volume");   // volume | vol_change_amount | vol_change_pct | change_pct
+  const [order, setOrder]     = useState("desc");
+
   if (!theme) return null;
+
+  const sorted = [...(theme.stocks || [])].sort((a, b) => {
+    const av = a[sortKey] ?? -Infinity;
+    const bv = b[sortKey] ?? -Infinity;
+    return order === "desc" ? bv - av : av - bv;
+  });
+
+  const SORT_OPTS = [
+    { key: "volume",            label: "오늘 거래대금",       unit: "원" },
+    { key: "vol_change_amount", label: "거래대금 증가액",     unit: "원" },
+    { key: "vol_change_pct",    label: "거래대금 증가율",     unit: "%" },
+    { key: "change_pct",        label: "주가 등락률",         unit: "%" },
+  ];
+
   return (
     <div style={{
-      position: "fixed", inset: 0, zIndex: 999,
-      background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      padding: 20
+      position:"fixed", inset:0, zIndex:999,
+      background:"rgba(0,0,0,0.7)", backdropFilter:"blur(4px)",
+      display:"flex", alignItems:"center", justifyContent:"center", padding:20
     }} onClick={onClose}>
       <div style={{
-        background: "var(--bg-2)", border: "1px solid var(--border-hi)",
-        borderRadius: 16, padding: 24, width: "100%", maxWidth: 420,
-        maxHeight: "80vh", overflowY: "auto"
+        background:"var(--bg-2)", border:"1px solid var(--border-hi)",
+        borderRadius:16, padding:24, width:"100%", maxWidth:460,
+        maxHeight:"85vh", overflowY:"auto"
       }} onClick={e => e.stopPropagation()}>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+
+        {/* 헤더 */}
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
           <div>
             <div style={{ fontWeight:700, fontSize:"1rem", color:"var(--cyan)" }}>{theme.theme}</div>
             <div style={{ fontSize:"0.72rem", color:"var(--text-3)", marginTop:2 }}>{theme.description}</div>
@@ -27,32 +55,61 @@ function StockModal({ theme, onClose }) {
           <button onClick={onClose} style={{ background:"var(--bg-3)", border:"none", color:"var(--text-2)", borderRadius:8, padding:"4px 10px", cursor:"pointer", fontSize:"0.8rem" }}>닫기</button>
         </div>
 
-        <div style={{ fontSize:"0.65rem", color:"var(--text-3)", fontFamily:"var(--font-mono)", borderBottom:"1px solid var(--border)", paddingBottom:6, marginBottom:8, display:"flex", justifyContent:"space-between" }}>
-          <span>종목명 / 코드</span><span>거래대금</span>
-        </div>
-
-        {theme.stocks.map((s, i) => (
-          <div key={s.code} style={{
-            display:"flex", justifyContent:"space-between", alignItems:"center",
-            padding:"7px 0", borderBottom:"1px solid rgba(255,255,255,0.04)"
-          }}>
-            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-              <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.65rem", color:"var(--text-3)", width:18, textAlign:"right" }}>{i+1}</span>
-              <div>
-                <div style={{ fontSize:"0.82rem", fontWeight:500 }}>{s.name}</div>
-                <div style={{ fontSize:"0.65rem", color:"var(--text-3)", fontFamily:"var(--font-mono)" }}>{s.code}</div>
-              </div>
-            </div>
-            <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.78rem", fontWeight:600, color: s.volume > 0 ? "var(--text-1)" : "var(--text-3)" }}>
-              {s.volume_formatted || "0"}
-            </span>
+        {/* 요약 */}
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", background:"rgba(99,179,237,0.06)", borderRadius:8, padding:"8px 12px", marginBottom:4 }}>
+          <div>
+            <div style={{ fontSize:"0.7rem", color:"var(--text-3)" }}>섹터 평균 등락률</div>
+            <div style={{ fontSize:"0.69rem", color:"var(--text-3)", marginTop:1 }}>전일 종가 대비 기준</div>
           </div>
-        ))}
-
-        <div style={{ marginTop:12, padding:"8px 12px", background:"rgba(99,179,237,0.06)", borderRadius:8, display:"flex", justifyContent:"space-between" }}>
-          <span style={{ fontSize:"0.72rem", color:"var(--text-3)" }}>테마 합계</span>
+          <ChangeBadge value={theme.avg_change_pct} size="0.88rem" />
           <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.82rem", fontWeight:700, color:"var(--cyan)" }}>{theme.total_volume_formatted}</span>
         </div>
+
+        {/* 정렬 */}
+        <div style={{ marginBottom:10 }}>
+          <div style={{ fontSize:"0.69rem", color:"var(--text-3)", fontFamily:"var(--font-mono)", marginBottom:5 }}>정렬 기준</div>
+          <div style={{ display:"flex", flexWrap:"wrap", gap:4, marginBottom:6 }}>
+            {SORT_OPTS.map(o => (
+              <button key={o.key} onClick={() => { setSortKey(o.key); setOrder("desc"); }} style={{
+                background: sortKey===o.key ? "var(--bg-3)" : "var(--bg-2)",
+                border: `1px solid ${sortKey===o.key ? "var(--cyan)" : "var(--border)"}`,
+                borderRadius:6, padding:"3px 9px",
+                color: sortKey===o.key ? "var(--cyan)" : "var(--text-3)",
+                fontSize:"0.69rem", cursor:"pointer", fontFamily:"var(--font-mono)"
+              }}>{o.label}</button>
+            ))}
+          </div>
+          <div style={{ display:"flex", gap:4 }}>
+            <button onClick={() => setOrder("desc")} style={{ background:order==="desc"?"var(--bg-3)":"var(--bg-2)", border:`1px solid ${order==="desc"?"var(--up)":"var(--border)"}`, borderRadius:6, padding:"2px 10px", color:order==="desc"?"var(--up)":"var(--text-3)", fontSize:"0.69rem", cursor:"pointer" }}>높은순 ↓</button>
+            <button onClick={() => setOrder("asc")}  style={{ background:order==="asc"?"var(--bg-3)":"var(--bg-2)",  border:`1px solid ${order==="asc"?"var(--dn)":"var(--border)"}`,  borderRadius:6, padding:"2px 10px", color:order==="asc"?"var(--dn)":"var(--text-3)",  fontSize:"0.69rem", cursor:"pointer" }}>낮은순 ↑</button>
+          </div>
+        </div>
+
+        {/* 컬럼 헤더 */}
+        <div style={{ fontSize:"0.69rem", color:"var(--text-3)", fontFamily:"var(--font-mono)", borderBottom:"1px solid var(--border)", paddingBottom:5, marginBottom:6, display:"flex", justifyContent:"space-between" }}>
+          <span>#  종목명</span>
+          <span style={{ display:"flex", gap:8 }}><span>주가등락</span><span>거래대금↑%</span><span>거래대금</span></span>
+        </div>
+
+        {/* 종목 리스트 */}
+        {sorted.map((s, i) => (
+          <div key={s.code} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"7px 0", borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+              <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.69rem", color:"var(--text-3)", width:18, textAlign:"right" }}>{i+1}</span>
+              <div>
+                <div style={{ fontSize:"0.82rem", fontWeight:500 }}>{s.name}</div>
+                <div style={{ fontSize:"0.69rem", color:"var(--text-3)", fontFamily:"var(--font-mono)" }}>{s.code}</div>
+              </div>
+            </div>
+            <div style={{ display:"flex", alignItems:"center", gap:8, textAlign:"right" }}>
+              <ChangeBadge value={s.change_pct} size="0.68rem" />
+              <ChangeBadge value={s.vol_change_pct} size="0.68rem" />
+              <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.75rem", fontWeight:600, color: s.volume > 0 ? "var(--text-1)" : "var(--text-3)" }}>
+                {s.volume_formatted || "0"}
+              </span>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -116,16 +173,16 @@ export default function TopThemes({ market, onThemeSelect, date, selectedTheme }
                   </div>
                   <div className="theme-desc">{theme.description}</div>
                 </div>
-                <span className="theme-vol" style={{ color }}>{theme.total_volume_formatted}</span>
+
+                {/* 거래대금 + 평균 등락률 */}
+                <div style={{ textAlign:"right" }}>
+                  <div className="theme-vol" style={{ color }}>{theme.total_volume_formatted}</div>
+                  <ChangeBadge value={theme.avg_change_pct} />
+                </div>
 
                 {/* 종목 전체 보기 버튼 */}
                 <button
-                  style={{
-                    background: "rgba(255,255,255,0.06)", border: "none",
-                    borderRadius: 6, padding: "3px 7px", cursor: "pointer",
-                    color: "var(--text-3)", display:"flex", alignItems:"center", gap:3,
-                    fontSize:"0.65rem"
-                  }}
+                  style={{ background:"rgba(255,255,255,0.06)", border:"none", borderRadius:6, padding:"3px 7px", cursor:"pointer", color:"var(--text-3)", display:"flex", alignItems:"center", gap:3, fontSize:"0.69rem" }}
                   onClick={e => { e.stopPropagation(); setModalTheme(theme); }}
                   title="종목 전체 보기"
                 >
@@ -145,7 +202,7 @@ export default function TopThemes({ market, onThemeSelect, date, selectedTheme }
                 }} />
               </div>
 
-              {/* 인라인 종목 미리보기 (TOP5) */}
+              {/* 인라인 종목 미리보기 TOP5 */}
               {isOpen && (
                 <div className="theme-stocks">
                   {theme.stocks.slice(0,5).map(s => (
@@ -154,7 +211,10 @@ export default function TopThemes({ market, onThemeSelect, date, selectedTheme }
                         <span className="stock-name">{s.name}</span>
                         <span className="stock-code">{s.code}</span>
                       </span>
-                      <span className="stock-vol">{s.volume_formatted}</span>
+                      <span style={{ display:"flex", alignItems:"center", gap:8 }}>
+                        <ChangeBadge value={s.change_pct} />
+                        <span className="stock-vol">{s.volume_formatted}</span>
+                      </span>
                     </div>
                   ))}
                   {theme.stocks.length > 5 && (
