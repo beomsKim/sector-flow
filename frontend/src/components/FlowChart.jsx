@@ -166,10 +166,7 @@ function StocksTab({ themeName, date }) {
               </div>
             </div>
             <div style={{ display:"flex", alignItems:"center", gap:14, textAlign:"right" }}>
-              <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.72rem", fontWeight:700,
-                color: chg > 0 ? "var(--up)" : chg < 0 ? "var(--dn)" : "var(--text-3)" }}>
-                {chg !== undefined ? `${chg > 0 ? "+" : ""}${chg?.toFixed(2)}%` : "-"}
-              </span>
+              <ChangeBadge value={chg} size="0.72rem" />
               <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.72rem", color:"var(--text-2)" }}>{s.volume_formatted || "-"}</span>
             </div>
           </div>
