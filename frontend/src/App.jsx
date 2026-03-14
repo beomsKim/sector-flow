@@ -4,6 +4,7 @@ import TopThemes from "./components/TopThemes";
 import FlowChart from "./components/FlowChart";
 import SurgeAlert from "./components/SurgeAlert";
 import AdminPage from "./pages/AdminPage";
+import LoadingBar from "./components/LoadingBar";
 import { getDefaultDate, formatDateDisplay, useTopThemes } from "./hooks/useThemeData";
 
 export default function App() {
@@ -30,6 +31,7 @@ export default function App() {
   // 관리자 페이지
   if (page === "admin") return (
     <div className="app-root">
+      <LoadingBar />
       <header className="header">
         <div className="header-inner">
           <div className="logo">
@@ -47,6 +49,7 @@ export default function App() {
 
   return (
     <div className="app-root">
+      <LoadingBar />
       <header className="header">
         {/* 1줄: 로고 + 아이콘 버튼 */}
         <div className="header-inner">

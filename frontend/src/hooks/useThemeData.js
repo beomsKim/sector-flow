@@ -4,27 +4,47 @@ import axios from "axios";
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 const api = axios.create({ baseURL: BASE_URL });
 
+// ── 전역 로딩 카운터 (진행 중인 요청 수)
+let _loadingCount = 0;
+const _listeners = new Set();
+
+function notifyListeners() {
+  _listeners.forEach(fn => fn(_loadingCount > 0));
+}
+
+api.interceptors.request.use(config => {
+  _loadingCount++;
+  notifyListeners();
+  return config;
+});
+
+api.interceptors.response.use(
+  res => { _loadingCount = Math.max(0, _loadingCount - 1); notifyListeners(); return res; },
+  err => { _loadingCount = Math.max(0, _loadingCount - 1); notifyListeners(); return Promise.reject(err); }
+);
+
+// 전역 로딩 상태 훅
+export function useGlobalLoading() {
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    _listeners.add(setLoading);
+    return () => _listeners.delete(setLoading);
+  }, []);
+  return loading;
+}
+
+// 최근 거래일 계산 (프론트에서도 기본값으로 사용)
 export function getDefaultDate() {
-  const now = new Date();
-  const hour = now.getHours();
-
-  // 오후 4시 이전이면 전 거래일, 이후면 당일
-  const base = new Date(now);
-  if (hour < 16) {
-    base.setDate(base.getDate() - 1);
-  }
-
-  // 주말이면 금요일로
-  while (base.getDay() === 0 || base.getDay() === 6) {
-    base.setDate(base.getDate() - 1);
-  }
-
-  return base.toISOString().slice(0, 10).replace(/-/g, "");
+  const d = new Date();
+  // 오전 9시 이전이거나 주말이면 전날로
+  if (d.getHours() < 9) d.setDate(d.getDate() - 1);
+  while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() - 1);
+  return d.toISOString().slice(0, 10).replace(/-/g, ""); // YYYYMMDD
 }
 
 export function formatDateDisplay(yyyymmdd) {
   if (!yyyymmdd) return "";
-  return `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6, 8)}`;
+  return `${yyyymmdd.slice(0,4)}-${yyyymmdd.slice(4,6)}-${yyyymmdd.slice(6,8)}`;
 }
 
 export function useTopThemes(market = "kr", top = 10, date = null) {
@@ -83,7 +103,7 @@ export function useThemeChart(themeName, weeks = 1, market = "kr", date = null) 
   const [error, setError] = useState(null);
 
   const fetch = useCallback(async () => {
-    if (!themeName) { setLoading(false); return; }
+    if (!themeName) return;
     setLoading(true);
     setError(null);
     try {
