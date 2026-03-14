@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from themes.mapper import THEME_STOCK_MAP
+from themes.mapper import get_merged_theme_map
 import logging
 
 logger = logging.getLogger(__name__)
@@ -58,7 +58,7 @@ def _build_daily_cache(date: str):
     if date in _daily_cache and prev_date in _daily_cache:
         return
 
-    all_codes = list({s["code"].zfill(6) for td in THEME_STOCK_MAP.values() for s in td["stocks"]})
+    all_codes = list({s["code"].zfill(6) for td in get_merged_theme_map().values() for s in td["stocks"]})
     dt = datetime.strptime(date, "%Y%m%d")
     start = (dt - timedelta(days=7)).strftime("%Y-%m-%d")
     end = dt.strftime("%Y-%m-%d")
@@ -114,7 +114,7 @@ def calculate_theme_volume_today(date: str = None) -> tuple:
             df = fdr.StockListing('KRX')
             df["Code"] = df["Code"].astype(str).str.zfill(6)
             df = df.set_index("Code")
-            all_codes = {s["code"].zfill(6) for td in THEME_STOCK_MAP.values() for s in td["stocks"]}
+            all_codes = {s["code"].zfill(6) for td in get_merged_theme_map().values() for s in td["stocks"]}
             _daily_cache[date] = {
                 code: {
                     "volume": int(df.loc[code, "Amount"] or 0) if code in df.index else 0,
@@ -136,7 +136,7 @@ def calculate_theme_volume_today(date: str = None) -> tuple:
     prev_map  = _daily_cache.get(prev_date, {})
 
     theme_results = []
-    for theme_name, theme_data in THEME_STOCK_MAP.items():
+    for theme_name, theme_data in get_merged_theme_map().items():
         stocks = theme_data["stocks"]
         stock_details = []
         total_volume = 0
@@ -211,7 +211,7 @@ def calculate_theme_volume_range(weeks: int = 1, end_date: str = None) -> dict:
     start = (dt - timedelta(weeks=weeks)).strftime("%Y-%m-%d")
     end = dt.strftime("%Y-%m-%d")
 
-    all_codes = list({s["code"] for td in THEME_STOCK_MAP.values() for s in td["stocks"]})
+    all_codes = list({s["code"] for td in get_merged_theme_map().values() for s in td["stocks"]})
     logger.info(f"[FDR] 기간 {start}~{end} {len(all_codes)}종목 병렬 수집")
 
     code_series = {}
@@ -222,7 +222,7 @@ def calculate_theme_volume_range(weeks: int = 1, end_date: str = None) -> dict:
             code_series[code] = series
 
     theme_ts = {}
-    for theme_name, theme_data in THEME_STOCK_MAP.items():
+    for theme_name, theme_data in get_merged_theme_map().items():
         stocks = theme_data["stocks"]
         all_dates = sorted({d for s in stocks for d in code_series.get(s["code"], {})})
         series_out = []
@@ -247,7 +247,7 @@ def detect_surge_themes(threshold_ratio: float = 1.5, date: str = None) -> list:
     prev_map  = _daily_cache.get(prev_date, {})
 
     surge_themes = []
-    for theme_name, theme_data in THEME_STOCK_MAP.items():
+    for theme_name, theme_data in get_merged_theme_map().items():
         stocks = theme_data["stocks"]
         today_total = sum(_safe_get(today_map, s["code"].zfill(6))["volume"] for s in stocks)
         prev_total  = sum(_safe_get(prev_map,  s["code"].zfill(6))["volume"] for s in stocks)

@@ -326,13 +326,32 @@ THEME_STOCK_MAP = {
     },
 }
 
+import os, json
+
+# 커스텀 테마 파일 경로
+_CUSTOM_FILE = os.path.join(os.path.dirname(__file__), "custom_themes.json")
+
+def _load_custom() -> dict:
+    if os.path.exists(_CUSTOM_FILE):
+        try:
+            with open(_CUSTOM_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    return {}
+
+def get_merged_theme_map() -> dict:
+    """기본 테마 + 커스텀 테마 합산 (커스텀이 오버라이드)"""
+    merged = dict(THEME_STOCK_MAP)
+    merged.update(_load_custom())
+    return merged
 
 def get_all_themes():
-    return list(THEME_STOCK_MAP.keys())
+    return list(get_merged_theme_map().keys())
 
 def get_stocks_by_theme(theme_name: str):
-    theme = THEME_STOCK_MAP.get(theme_name)
+    theme = get_merged_theme_map().get(theme_name)
     return theme["stocks"] if theme else []
 
 def get_theme_info(theme_name: str):
-    return THEME_STOCK_MAP.get(theme_name, {})
+    return get_merged_theme_map().get(theme_name, {})

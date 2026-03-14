@@ -13,7 +13,7 @@ from typing import List
 import sys, os, json
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from themes.mapper import THEME_STOCK_MAP
+from themes.mapper import THEME_STOCK_MAP, get_merged_theme_map
 
 router = APIRouter(prefix="/api/admin")
 
@@ -22,8 +22,11 @@ CUSTOM_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "themes",
 
 def load_custom() -> dict:
     if os.path.exists(CUSTOM_FILE):
-        with open(CUSTOM_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+        try:
+            with open(CUSTOM_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return {}
     return {}
 
 def save_custom(data: dict):
@@ -31,10 +34,8 @@ def save_custom(data: dict):
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 def get_all_themes() -> dict:
-    """기본 테마 + 커스텀 테마 합산"""
-    merged = dict(THEME_STOCK_MAP)
-    merged.update(load_custom())
-    return merged
+    """기본 테마 + 커스텀 테마 합산 (mapper의 get_merged_theme_map 사용)"""
+    return get_merged_theme_map()
 
 # ── 모델
 class StockItem(BaseModel):
