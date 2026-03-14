@@ -48,30 +48,36 @@ export default function App() {
   return (
     <div className="app-root">
       <header className="header">
+        {/* 1줄: 로고 + 아이콘 버튼 */}
         <div className="header-inner">
           <div className="logo">
             <div className="logo-icon"><Activity size={14} color="#000" strokeWidth={2.5} /></div>
             <span className="logo-text">SECTOR<span className="logo-accent">FLOW</span></span>
             <span className="logo-badge">BETA</span>
           </div>
-          <div className="header-controls">
-            <div className="date-picker-wrap">
-              <Calendar size={13} color="var(--text-3)" />
-              <input type="date" className="date-input" value={dateInputValue}
-                max={new Date().toISOString().slice(0,10)} onChange={handleDateChange} />
-            </div>
-            <div className="market-tabs">
-              {[{value:"kr",label:"KR",sub:"한국"},{value:"us",label:"US",sub:"미국"}].map(m => (
-                <button key={m.value} className={`market-btn ${market===m.value?"active":""}`} onClick={() => setMarket(m.value)}>
-                  <span className="market-label">{m.label}</span>
-                  <span className="market-sub">{m.sub}</span>
-                </button>
-              ))}
-            </div>
+          <div style={{ display:"flex", gap:6, alignItems:"center" }}>
             <button className="refresh-btn" onClick={handleRefresh} title="새로고침"><RefreshCw size={14}/></button>
-            <button className="refresh-btn" onClick={() => setPage("admin")} title="테마 관리" style={{ marginLeft:2 }}>
+            <button className="refresh-btn" onClick={() => setPage("admin")} title="테마 관리">
               <Settings size={14}/>
             </button>
+          </div>
+        </div>
+
+        {/* 2줄: 날짜 + 마켓탭 — 모바일에서도 항상 표시 */}
+        <div className="header-controls-row">
+          <div className="date-picker-wrap" onClick={e => { const inp = e.currentTarget.querySelector("input"); inp?.showPicker?.(); }} style={{ cursor:"pointer" }}>
+            <Calendar size={13} color="var(--text-3)" />
+            <input type="date" className="date-input" value={dateInputValue}
+              max={new Date().toISOString().slice(0,10)} onChange={handleDateChange} />
+            <span style={{ fontSize:"0.69rem", color:"var(--text-3)", whiteSpace:"nowrap", marginLeft:4 }}>최대 수년치</span>
+          </div>
+          <div className="market-tabs">
+            {[{value:"kr",label:"KR",sub:"한국"},{value:"us",label:"US",sub:"미국"}].map(m => (
+              <button key={m.value} className={`market-btn ${market===m.value?"active":""}`} onClick={() => setMarket(m.value)}>
+                <span className="market-label">{m.label}</span>
+                <span className="market-sub">{m.sub}</span>
+              </button>
+            ))}
           </div>
         </div>
         <div className="date-bar">

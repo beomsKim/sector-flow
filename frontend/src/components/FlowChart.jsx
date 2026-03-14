@@ -1,4 +1,30 @@
 import React, { useState, useEffect } from "react";
+
+function ChangeBadge({ value, size = "0.69rem" }) {
+  if (value === undefined || value === null) return null;
+  const color = value > 0 ? "var(--up)" : value < 0 ? "var(--dn)" : "var(--text-3)";
+  const arrow = value > 0 ? "▲" : value < 0 ? "▼" : "";
+  return (
+    <span style={{ fontFamily:"var(--font-mono)", fontSize:size, fontWeight:700, color, display:"inline-flex", alignItems:"center", gap:2 }}>
+      {arrow}{value > 0 ? "+" : ""}{value?.toFixed(2)}%
+    </span>
+  );
+}
+
+function StockLink({ code, name, market = "kr" }) {
+  const url = market === "us"
+    ? `https://finance.yahoo.com/quote/${code}`
+    : `https://finance.naver.com/item/main.naver?code=${code}`;
+  return (
+    <a href={url} target="_blank" rel="noopener noreferrer"
+      style={{ color:"inherit", textDecoration:"none" }}
+      onMouseEnter={e => e.currentTarget.style.color = "var(--cyan)"}
+      onMouseLeave={e => e.currentTarget.style.color = "inherit"}
+    >
+      {name}
+    </a>
+  );
+}
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, BarChart, Bar, Cell
@@ -72,12 +98,7 @@ function RankingTab({ market, date, onThemeSelect }) {
                 <span style={{ fontSize:"0.85rem", fontWeight:600 }}>{item.theme}</span>
               </div>
               <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-                {chg !== undefined && (
-                  <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.72rem", fontWeight:700,
-                    color: chg > 0 ? "var(--up)" : chg < 0 ? "var(--dn)" : "var(--text-3)" }}>
-                    {chg > 0 ? "+" : ""}{chg?.toFixed(2)}%
-                  </span>
-                )}
+                <ChangeBadge value={chg} size="0.72rem" />
                 <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.82rem", fontWeight:700, color }}>{item.total_volume_formatted}</span>
               </div>
             </div>
@@ -140,7 +161,7 @@ function StocksTab({ themeName, date }) {
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
               <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.69rem", color:"var(--text-3)", width:16, textAlign:"right" }}>{i+1}</span>
               <div>
-                <div style={{ fontSize:"0.82rem", fontWeight:600 }}>{s.name}</div>
+                <div style={{ fontSize:"0.82rem", fontWeight:600 }}><StockLink code={s.code} name={s.name} /></div>
                 <div style={{ fontFamily:"var(--font-mono)", fontSize:"0.69rem", color:"var(--text-3)" }}>{s.code}</div>
               </div>
             </div>

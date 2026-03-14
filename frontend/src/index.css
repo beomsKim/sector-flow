@@ -71,7 +71,15 @@ body {
 }
 .header-inner {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 20px; height: 52px;
+  padding: 0 20px; height: 48px;
+}
+
+/* 2줄: 날짜 + 마켓탭 */
+.header-controls-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 20px 8px;
+  border-top: 1px solid var(--border);
+  background: rgba(255,255,255,0.01);
 }
 .logo { display: flex; align-items: center; gap: 8px; }
 .logo-icon {
@@ -283,30 +291,22 @@ body {
   .mobile-tabs { display: flex; }
   .main { padding: 12px; }
 
-  /* 헤더 모바일 대응 */
-  .header-inner { padding: 0 12px; height: 48px; }
+  .header-inner { padding: 0 14px; height: 44px; }
   .logo-text { font-size: 0.88rem; }
   .logo-badge { display: none; }
-  .header-controls { gap: 5px; }
-
-  /* 날짜 picker 축소 */
-  .date-picker-wrap { padding: 3px 7px; }
-  .date-input { width: 95px; font-size: 0.69rem; }
-
-  /* 마켓 탭 축소 */
-  .market-btn { padding: 2px 7px; }
-  .market-label { font-size: 0.69rem; }
-  .market-sub { display: none; }
-
-  /* 새로고침/설정 버튼 축소 */
   .refresh-btn { width: 28px; height: 28px; }
 
-  /* date-bar 축소 */
-  .date-bar { padding: 4px 12px; gap: 6px; }
+  .header-controls-row { padding: 6px 14px 8px; gap: 8px; }
+  .date-picker-wrap { flex: 1; }
+  .date-input { width: 100%; font-size: 0.72rem; }
+  .market-sub { display: none; }
+  .market-btn { padding: 3px 10px; }
+
+  .date-bar { padding: 4px 14px; }
   .date-bar-hint { display: none; }
 }
 
-@media (max-width: 400px) {
-  .date-picker-wrap { display: none; }
+@media (max-width: 360px) {
   .logo-icon { width: 22px; height: 22px; }
+  .logo-text { font-size: 0.82rem; }
 }

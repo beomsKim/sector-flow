@@ -4,13 +4,31 @@ import { useTopThemes } from "../hooks/useThemeData";
 
 const COLORS = ["#63b3ed","#b794f4","#48bb78","#f6ad55","#fc8181","#4fd1c5","#9f7aea","#68d391","#fbd38d","#feb2b2","#76e4f7","#fbb6ce"];
 
-function ChangeBadge({ value, size = "0.65rem" }) {
+function ChangeBadge({ value, size = "0.69rem" }) {
   if (value === undefined || value === null) return null;
   const color = value > 0 ? "var(--up)" : value < 0 ? "var(--dn)" : "var(--text-3)";
+  const arrow = value > 0 ? "▲" : value < 0 ? "▼" : "";
   return (
-    <span style={{ fontFamily:"var(--font-mono)", fontSize:size, fontWeight:700, color }}>
-      {value > 0 ? "+" : ""}{value?.toFixed(2)}%
+    <span style={{ fontFamily:"var(--font-mono)", fontSize:size, fontWeight:700, color, display:"inline-flex", alignItems:"center", gap:2 }}>
+      {arrow}{value > 0 ? "+" : ""}{value?.toFixed(2)}%
     </span>
+  );
+}
+
+// 종목 링크 헬퍼
+function StockLink({ code, name, market = "kr" }) {
+  const url = market === "us"
+    ? `https://finance.yahoo.com/quote/${code}`
+    : `https://finance.naver.com/item/main.naver?code=${code}`;
+  return (
+    <a href={url} target="_blank" rel="noopener noreferrer"
+      style={{ color:"inherit", textDecoration:"none" }}
+      onClick={e => e.stopPropagation()}
+      onMouseEnter={e => e.currentTarget.style.color = "var(--cyan)"}
+      onMouseLeave={e => e.currentTarget.style.color = "inherit"}
+    >
+      {name}
+    </a>
   );
 }
 
@@ -97,7 +115,7 @@ function StockModal({ theme, onClose }) {
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
               <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.69rem", color:"var(--text-3)", width:18, textAlign:"right" }}>{i+1}</span>
               <div>
-                <div style={{ fontSize:"0.82rem", fontWeight:500 }}>{s.name}</div>
+                <div style={{ fontSize:"0.82rem", fontWeight:500 }}><StockLink code={s.code} name={s.name} market="kr" /></div>
                 <div style={{ fontSize:"0.69rem", color:"var(--text-3)", fontFamily:"var(--font-mono)" }}>{s.code}</div>
               </div>
             </div>
@@ -208,7 +226,7 @@ export default function TopThemes({ market, onThemeSelect, date, selectedTheme }
                   {theme.stocks.slice(0,5).map(s => (
                     <div key={s.code} className="stock-row">
                       <span>
-                        <span className="stock-name">{s.name}</span>
+                        <StockLink code={s.code} name={s.name} market="kr" />
                         <span className="stock-code">{s.code}</span>
                       </span>
                       <span style={{ display:"flex", alignItems:"center", gap:8 }}>
