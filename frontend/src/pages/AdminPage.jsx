@@ -49,7 +49,7 @@ function PinGate({ onPass }) {
         <button onClick={handleSubmit} style={{ ...btnStyle("#63b3ed"), width:"100%", justifyContent:"center", padding:"8px 0" }}>
           확인
         </button>
-        <div style={{ marginTop:12, fontSize:"0.65rem", color:"var(--text-3)" }}>
+        <div style={{ marginTop:12, fontSize:"0.69rem", color:"var(--text-3)" }}>
           기본 PIN: 0000 · <code>.env</code>의 VITE_ADMIN_PIN으로 변경
         </div>
       </div>
@@ -151,9 +151,9 @@ function ThemeEditor({ theme, onSave, onClose }) {
         {stocks.map((s, i) => (
           <div key={s.code} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"5px 6px", borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
             <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-              <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.65rem", color:"var(--text-3)", width:16 }}>{i+1}</span>
+              <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.69rem", color:"var(--text-3)", width:16 }}>{i+1}</span>
               <span style={{ fontSize:"0.8rem" }}>{s.name}</span>
-              <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.63rem", color:"var(--text-3)" }}>{s.code}</span>
+              <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.69rem", color:"var(--text-3)" }}>{s.code}</span>
             </div>
             <button onClick={() => setStocks(p => p.filter(x => x.code !== s.code))} style={{ background:"none", border:"none", color:"var(--text-3)", cursor:"pointer" }}><Trash2 size={12}/></button>
           </div>
@@ -168,52 +168,98 @@ function ThemeEditor({ theme, onSave, onClose }) {
   );
 }
 
-function NewThemeForm({ onCreated }) {
+function NewThemeForm({ onCreated, themes = [] }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
   const [stocks, setStocks] = useState([]);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
+  const [copyFrom, setCopyFrom] = useState("");
+
+  const handleCopy = (themeName) => {
+    const src = themes.find(t => t.name === themeName);
+    if (!src) return;
+    setDesc(src.description || "");
+    setStocks([...(src.stocks || [])]);
+    setCopyFrom(themeName);
+    setErr("");
+  };
+
   const handleCreate = async () => {
     if (!name.trim()) { setErr("테마명을 입력하세요"); return; }
     setSaving(true); setErr("");
     try {
       await apiFetch("/api/admin/themes", { method:"POST", body: JSON.stringify({ name:name.trim(), description:desc, stocks }) });
-      setName(""); setDesc(""); setStocks([]); setOpen(false); onCreated();
+      setName(""); setDesc(""); setStocks([]); setCopyFrom(""); setOpen(false); onCreated();
     } catch(e) { setErr(e.message); }
     finally { setSaving(false); }
   };
+
   if (!open) return (
     <button onClick={() => setOpen(true)} style={{ ...btnStyle("#48bb78"), width:"100%", justifyContent:"center", padding:"10px 0", marginBottom:14 }}>
       <Plus size={15}/> 새 테마 추가
     </button>
   );
+
   return (
     <div style={{ background:"var(--bg-2)", border:"1px solid rgba(72,187,120,0.3)", borderRadius:12, padding:18, marginBottom:14 }}>
       <div style={{ fontFamily:"var(--font-display)", fontSize:"0.95rem", fontWeight:700, color:"#48bb78", marginBottom:12 }}>새 테마 만들기</div>
-      <div style={{ display:"flex", gap:8, marginBottom:8 }}>
-        <input placeholder="테마명 (예: HBM·메모리)" value={name} onChange={e => setName(e.target.value)} style={inputStyle} />
-        <input placeholder="설명 (예: 고대역폭메모리 관련주)" value={desc} onChange={e => setDesc(e.target.value)} style={{ ...inputStyle, flex:2 }} />
+
+      {/* 기존 섹터 복사 */}
+      <div style={{ marginBottom:12 }}>
+        <label style={labelStyle}>기존 섹터에서 복사 (선택사항)</label>
+        <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+          <select
+            value={copyFrom}
+            onChange={e => handleCopy(e.target.value)}
+            style={{ ...inputStyle, flex:1, cursor:"pointer" }}
+          >
+            <option value="">— 복사할 섹터 선택 —</option>
+            {themes.map(t => (
+              <option key={t.name} value={t.name}>{t.name} ({t.stock_count}종목)</option>
+            ))}
+          </select>
+          {copyFrom && (
+            <button
+              onClick={() => { setStocks([]); setDesc(""); setCopyFrom(""); }}
+              style={{ ...btnStyle("#fc8181"), padding:"5px 10px", fontSize:"0.72rem", whiteSpace:"nowrap" }}
+            >
+              <X size={12}/> 초기화
+            </button>
+          )}
+        </div>
+        {copyFrom && (
+          <div style={{ fontSize:"0.72rem", color:"#48bb78", marginTop:4 }}>
+            ✅ "{copyFrom}" 에서 {stocks.length}개 종목 복사됨 — 이름만 바꾸면 완성!
+          </div>
+        )}
       </div>
-      <label style={labelStyle}>종목 추가 (나중에도 추가 가능)</label>
+
+      <div style={{ display:"flex", gap:8, marginBottom:8 }}>
+        <input placeholder="새 테마명 (예: HBM·메모리)" value={name} onChange={e => setName(e.target.value)} style={inputStyle} />
+        <input placeholder="설명" value={desc} onChange={e => setDesc(e.target.value)} style={{ ...inputStyle, flex:2 }} />
+      </div>
+
+      <label style={labelStyle}>종목 목록 ({stocks.length}개) — 추가/삭제 가능</label>
       <StockSearchInput onAdd={s => { if (!stocks.find(x => x.code===s.code)) setStocks(p=>[...p,s]); }} />
-      <div style={{ maxHeight:130, overflowY:"auto", marginTop:6 }}>
+      <div style={{ maxHeight:160, overflowY:"auto", marginTop:6 }}>
         {stocks.map(s => (
-          <div key={s.code} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"4px 4px" }}>
-            <span style={{ fontSize:"0.8rem" }}>{s.name} <span style={{ color:"var(--text-3)", fontFamily:"var(--font-mono)", fontSize:"0.63rem" }}>{s.code}</span></span>
+          <div key={s.code} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"4px 4px", borderBottom:"1px solid rgba(255,255,255,0.03)" }}>
+            <span style={{ fontSize:"0.8rem" }}>{s.name} <span style={{ color:"var(--text-3)", fontFamily:"var(--font-mono)", fontSize:"0.69rem" }}>{s.code}</span></span>
             <button onClick={() => setStocks(p=>p.filter(x=>x.code!==s.code))} style={{ background:"none", border:"none", color:"var(--text-3)", cursor:"pointer" }}><Trash2 size={12}/></button>
           </div>
         ))}
       </div>
       {err && <div style={{ color:"#fc8181", fontSize:"0.73rem", marginTop:6 }}>{err}</div>}
       <div style={{ display:"flex", gap:8, marginTop:12, justifyContent:"flex-end" }}>
-        <button onClick={() => setOpen(false)} style={btnStyle("#4a5568")}>취소</button>
+        <button onClick={() => { setOpen(false); setCopyFrom(""); setStocks([]); }} style={btnStyle("#4a5568")}>취소</button>
         <button onClick={handleCreate} disabled={saving} style={btnStyle("#48bb78")}><Save size={14}/> {saving?"생성 중...":"생성"}</button>
       </div>
     </div>
   );
 }
+
 
 export default function AdminPage({ onBack }) {
   const [authed, setAuthed] = useState(ADMIN_PIN === "0000" ? false : false);
@@ -271,7 +317,7 @@ export default function AdminPage({ onBack }) {
       <HelpPanel />
 
       {/* 새 테마 추가 */}
-      <NewThemeForm onCreated={loadThemes} />
+      <NewThemeForm onCreated={loadThemes} themes={themes} />
 
       {/* 검색 */}
       <div style={{ position:"relative", marginBottom:12 }}>
@@ -292,9 +338,9 @@ export default function AdminPage({ onBack }) {
               <div style={{ flex:1, minWidth:0 }}>
                 <div style={{ display:"flex", alignItems:"center", gap:6 }}>
                   <span style={{ fontWeight:700, fontSize:"0.87rem" }}>{theme.name}</span>
-                  {theme.is_custom && <span style={{ fontSize:"0.58rem", background:"rgba(72,187,120,0.12)", color:"#48bb78", border:"1px solid rgba(72,187,120,0.3)", borderRadius:4, padding:"1px 5px" }}>커스텀</span>}
+                  {theme.is_custom && <span style={{ fontSize:"0.69rem", background:"rgba(72,187,120,0.12)", color:"#48bb78", border:"1px solid rgba(72,187,120,0.3)", borderRadius:4, padding:"1px 5px" }}>커스텀</span>}
                 </div>
-                <div style={{ fontSize:"0.68rem", color:"var(--text-3)", marginTop:1 }}>{theme.description} · {theme.stock_count}개 종목</div>
+                <div style={{ fontSize:"0.69rem", color:"var(--text-3)", marginTop:1 }}>{theme.description} · {theme.stock_count}개 종목</div>
               </div>
               <div style={{ display:"flex", gap:5, alignItems:"center" }}>
                 <button onClick={e => { e.stopPropagation(); setEditingTheme(isEditing?null:theme.name); setExpandedTheme(theme.name); }}
@@ -319,9 +365,9 @@ export default function AdminPage({ onBack }) {
               <div style={{ padding:"0 14px 12px", borderTop:"1px solid var(--border)" }}>
                 {theme.stocks.map((s, i) => (
                   <div key={s.code} style={{ display:"flex", alignItems:"center", gap:8, padding:"5px 0", borderBottom:"1px solid rgba(255,255,255,0.03)" }}>
-                    <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.63rem", color:"var(--text-3)", width:20, textAlign:"right" }}>{i+1}</span>
+                    <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.69rem", color:"var(--text-3)", width:20, textAlign:"right" }}>{i+1}</span>
                     <span style={{ fontSize:"0.82rem", flex:1 }}>{s.name}</span>
-                    <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.65rem", color:"var(--text-3)" }}>{s.code}</span>
+                    <span style={{ fontFamily:"var(--font-mono)", fontSize:"0.69rem", color:"var(--text-3)" }}>{s.code}</span>
                   </div>
                 ))}
               </div>
@@ -334,5 +380,5 @@ export default function AdminPage({ onBack }) {
 }
 
 const inputStyle = { background:"var(--bg-3)", border:"1px solid var(--border)", borderRadius:7, padding:"6px 10px", color:"var(--text-1)", fontSize:"0.82rem", outline:"none", flex:1, fontFamily:"var(--font-body)" };
-const labelStyle = { display:"block", fontSize:"0.65rem", color:"var(--text-3)", marginBottom:3, fontFamily:"var(--font-mono)", textTransform:"uppercase" };
+const labelStyle = { display:"block", fontSize:"0.69rem", color:"var(--text-3)", marginBottom:3, fontFamily:"var(--font-mono)", textTransform:"uppercase" };
 const btnStyle = (color) => ({ display:"flex", alignItems:"center", gap:4, background:`${color}20`, border:`1px solid ${color}50`, color, borderRadius:7, padding:"5px 11px", cursor:"pointer", fontSize:"0.78rem", fontWeight:600, transition:"all 0.15s" });
