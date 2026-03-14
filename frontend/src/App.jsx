@@ -109,7 +109,7 @@ export default function App() {
           </div>
         </div>
         <div className="mobile-view">
-          {activeTab==="top"   && <TopThemes market={market} onThemeSelect={t=>{setSelectedTheme(t);setActiveTab("chart");}} date={date} selectedTheme={selectedTheme} />}
+          {activeTab==="top"   && <TopThemes market={market} onThemeSelect={setSelectedTheme} date={date} selectedTheme={selectedTheme} isMobile={true} onGoToChart={() => setActiveTab("chart")} />}
           {activeTab==="chart" && <FlowChart themeName={selectedTheme} market={market} date={date} large={false} />}
           {activeTab==="surge" && <SurgeAlert onThemeSelect={t=>{setSelectedTheme(t);setActiveTab("chart");}} date={date} />}
         </div>

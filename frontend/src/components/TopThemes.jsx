@@ -133,7 +133,7 @@ function StockModal({ theme, onClose }) {
   );
 }
 
-export default function TopThemes({ market, onThemeSelect, date, selectedTheme }) {
+export default function TopThemes({ market, onThemeSelect, date, selectedTheme, isMobile = false, onGoToChart }) {
   const { data, loading, error } = useTopThemes(market, 20, date);
   const [expanded, setExpanded] = useState(null);
   const [modalTheme, setModalTheme] = useState(null);
@@ -181,6 +181,8 @@ export default function TopThemes({ market, onThemeSelect, date, selectedTheme }
               onClick={() => {
                 setExpanded(isOpen ? null : theme.theme);
                 onThemeSelect?.(theme.theme);
+                // 모바일이 아닐 때만 차트로 이동 (모바일은 아코디언 유지)
+                if (!isMobile) return;
               }}
             >
               <div className="theme-item-top">
@@ -223,6 +225,21 @@ export default function TopThemes({ market, onThemeSelect, date, selectedTheme }
               {/* 인라인 종목 미리보기 TOP5 */}
               {isOpen && (
                 <div className="theme-stocks">
+                  {/* 모바일: 차트 보기 버튼 */}
+                  {isMobile && (
+                    <button
+                      onClick={e => { e.stopPropagation(); onGoToChart?.(); }}
+                      style={{
+                        width:"100%", marginBottom:8, padding:"7px 0",
+                        background:"rgba(99,179,237,0.1)", border:"1px solid rgba(99,179,237,0.3)",
+                        borderRadius:8, color:"var(--cyan)", fontSize:"0.78rem",
+                        fontWeight:600, cursor:"pointer", display:"flex",
+                        alignItems:"center", justifyContent:"center", gap:6
+                      }}
+                    >
+                      📊 {theme.theme} 차트 보기 →
+                    </button>
+                  )}
                   {theme.stocks.slice(0,5).map(s => (
                     <div key={s.code} className="stock-row">
                       <span>
