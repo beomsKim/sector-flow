@@ -3,6 +3,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 from api.routes import router
 from api.admin_routes import router as admin_router
 import logging
@@ -19,9 +20,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(router)
-app.include_router(admin_router)
+# UptimeRobot HEAD 요청 허용
+@app.head("/")
+async def head_root():
+    return Response(status_code=200)
 
 @app.get("/")
 async def root():
     return {"service": "SectorFlow API", "status": "ok"}
+
+app.include_router(router)
+app.include_router(admin_router)
